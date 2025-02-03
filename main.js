@@ -66,37 +66,59 @@ const initializeRoom = async () => {
     await device.load({ routerRtpCapabilities: joinRoomResp.routerRtpCapabilities });
     console.log(joinRoomResp);
 
-    // Enable the feed button for presenters
-    if (joinRoomResp.isPresenter) {
-        buttons.enableFeed.disabled = false;
-        buttons.enableFeed.classList.remove('btn-secondary');
-        buttons.enableFeed.classList.add('btn-primary');
+    // Enable the feed button for all users
+    buttons.enableFeed.disabled = false;
+    buttons.enableFeed.classList.remove('btn-secondary');
+    buttons.enableFeed.classList.add('btn-primary');
+
+    // Only show audio controls for presenters
+    if (!joinRoomResp.isPresenter) {
+        buttons.muteBtn.style.display = 'none';
     }
 
     requestTransportToConsume(joinRoomResp, socket, device, consumers);
 };
 
 const enableFeed = async () => {
-    const mic2Id = await getMic2();
-    localStream = await navigator.mediaDevices.getUserMedia({
-        video: true,
-        audio: { deviceId: { exact: mic2Id } },
-    });
-    buttons.localMediaLeft.srcObject = localStream;
-    buttons.enableFeed.disabled = true;
-    buttons.sendFeed.disabled = false;
-    buttons.muteBtn.disabled = false;
-    
-    buttons.sendFeed.classList.remove('btn-secondary');
-    buttons.sendFeed.classList.add('btn-success');
-    buttons.muteBtn.classList.remove('btn-secondary');
-    buttons.muteBtn.classList.add('btn-success');
+    try {
+        if (meetingInfo.isPresenter) {
+            const mic2Id = await getMic2();
+            localStream = await navigator.mediaDevices.getUserMedia({
+                video: true,
+                audio: { deviceId: { exact: mic2Id } },
+            });
+        } else {
+            // Participants only get video access
+            localStream = await navigator.mediaDevices.getUserMedia({
+                video: true,
+                audio: false
+            });
+        }
+        
+        buttons.localMediaLeft.srcObject = localStream;
+        buttons.enableFeed.disabled = true;
+        buttons.sendFeed.disabled = false;
+        
+        if (meetingInfo.isPresenter) {
+            buttons.muteBtn.disabled = false;
+            buttons.muteBtn.classList.remove('btn-secondary');
+            buttons.muteBtn.classList.add('btn-success');
+        }
+        
+        buttons.sendFeed.classList.remove('btn-secondary');
+        buttons.sendFeed.classList.add('btn-success');
+    } catch (error) {
+        console.error('Error accessing media devices:', error);
+        alert('Failed to access camera/microphone. Please check permissions.');
+    }
 };
 
 const sendFeed = async () => {
     producerTransport = await createProducerTransport(socket, device);
-    const producers = await createProducer(localStream, producerTransport);
-    audioProducer = producers.audioProducer;
+    const producers = await createProducer(localStream, producerTransport, meetingInfo.isPresenter);
+    if (meetingInfo.isPresenter) {
+        audioProducer = producers.audioProducer;
+    }
     videoProducer = producers.videoProducer;
     console.log(producers);
     buttons.hangUp.disabled = false;
@@ -105,6 +127,8 @@ const sendFeed = async () => {
 };
 
 const muteAudio = () => {
+    if (!audioProducer || !meetingInfo.isPresenter) return;
+    
     if (audioProducer.paused) {
         audioProducer.resume();
         buttons.muteBtn.innerHTML = "Audio On";
