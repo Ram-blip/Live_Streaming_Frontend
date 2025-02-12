@@ -1,4 +1,4 @@
-# Video Conferencing with Mediasoup
+# ActiveSpeaker and Video Conferencing with Mediasoup
 
 ## Overview
 
@@ -56,20 +56,6 @@ Ensure you have the following installed:
    http://localhost:3000
    ```
 
-## Project Structure
-
-```
-├── server.js          # Main server file
-├── package.json       # Dependencies and scripts
-├── public/            # Frontend files (HTML, CSS, JS)
-├── src/
-│   ├── config/        # Mediasoup configuration
-│   ├── sockets/       # Socket.IO logic
-│   ├── rooms/         # Room management logic
-│   ├── utils/         # Helper functions
-└── README.md          # Project Documentation
-```
-
 ## How It Works
 
 1. **Users Join a Room**
@@ -80,16 +66,6 @@ Ensure you have the following installed:
    - Real-time communication for session management.
 4. **Active Speaker Detection**
    - Displays the top 5 active speakers in the conference.
-
-## Contributing
-
-Contributions are welcome! Follow these steps:
-
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature-branch`)
-3. Commit your changes (`git commit -m 'Add feature'`)
-4. Push to the branch (`git push origin feature-branch`)
-5. Open a Pull Request
 
 ## License
 
